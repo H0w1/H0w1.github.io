@@ -87,7 +87,7 @@
 <meta property="og:site_name" content="BLOG of H0w1">
 <meta property="og:description" content="目标：配置环境实现linux内核的双机调试（调试机器host，被调试机器target）步骤：  确认内核有内核调试支持（一般都有） 符号文件： target：下载安装自己系统内核版本的符号文件（仅调试可能不必要） host：安装target对应内核版本的符号文件以备调试   源代码：   target：下载本机内核源码压缩包，解压放在/usr/src目录下（仅调试可能不必要） host: 在指定路">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-06-04T09:14:59.358Z">
+<meta property="og:updated_time" content="2018-06-04T11:10:52.448Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="linux内核调试：配置环境">
 <meta name="twitter:description" content="目标：配置环境实现linux内核的双机调试（调试机器host，被调试机器target）步骤：  确认内核有内核调试支持（一般都有） 符号文件： target：下载安装自己系统内核版本的符号文件（仅调试可能不必要） host：安装target对应内核版本的符号文件以备调试   源代码：   target：下载本机内核源码压缩包，解压放在/usr/src目录下（仅调试可能不必要） host: 在指定路">
@@ -358,27 +358,27 @@
 <li>串口通信</li>
 <li>修改target启动程序</li>
 <li>配置host</li>
-<li>调试及善后<h3 id="1-内核调试支持"><a href="#1-内核调试支持" class="headerlink" title="1.内核调试支持"></a>1.内核调试支持</h3></li>
+<li>调试及善后</li>
 </ul>
-<p>首先，如果对于从Ubuntu官网下载安装包而安装的系统，不需要重新编译内核。因为，Canonical（开发Ubuntu的公司）在编译时，已经开启了内核调试支持。如果想确认一下，可以查看/boot目录下的编译选项文件，比如Ubuntu 16.04 LTS版本：</p>
+<h3 id="内核调试支持"><a href="#内核调试支持" class="headerlink" title="内核调试支持"></a>内核调试支持</h3><p>首先，如果对于从Ubuntu官网下载安装包而安装的系统，不需要重新编译内核。因为，Canonical（开发Ubuntu的公司）在编译时，已经开启了内核调试支持。如果想确认一下，可以查看/boot目录下的编译选项文件，比如Ubuntu 16.04 LTS版本：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">:/boot$ cat config-4.8.0-36-generic | grep -i &quot;GDB&quot;</span><br><span class="line">        # CONFIG_CFG80211_INTERNAL_REGDB is not set</span><br><span class="line">        CONFIG_SERIAL_KGDB_NMI=y</span><br><span class="line">        CONFIG_GDB_SCRIPTS=y</span><br><span class="line">        CONFIG_HAVE_ARCH_KGDB=y</span><br><span class="line">        CONFIG_KGDB=y</span><br><span class="line">        CONFIG_KGDB_SERIAL_CONSOLE=y</span><br><span class="line">        # CONFIG_KGDB_TESTS is not set</span><br><span class="line">        CONFIG_KGDB_LOW_LEVEL_TRAP=y</span><br><span class="line">        CONFIG_KGDB_KDB=y</span><br></pre></td></tr></table></figure>
 <p>可以看到，关于KDB和KGDB的几个选项都是开启的（yes）。<br>如果内核不支持，请移步<a href="https://www.anquanke.com/post/id/105342#h2-0" target="_blank" rel="noopener">这里</a>。<br>本文实验环境如下：</p>
 <blockquote>
 <p>Windows 10 ，VMware® Workstation 12 Pro 下开两个虚拟机<br>target：Linux ubuntu 4.8.0-36-generic #36~16.04.1-Ubuntu SMP<br>host: Linux ubuntu 4.13.0-43-generic #48~16.04.1-Ubuntu SMP</p>
 </blockquote>
 <p>使用 uname -a 查询系统版本信息。</p>
-<h3 id="2-符号文件"><a href="#2-符号文件" class="headerlink" title="2.符号文件"></a>2.符号文件</h3><blockquote>
+<h3 id="符号文件"><a href="#符号文件" class="headerlink" title="符号文件"></a>符号文件</h3><blockquote>
 <p>准备：target内核版本符号文件     </p>
 <ul>
 <li>推荐方法：<a href="http://ddebs.ubuntu.com/pool/main/l/linux-hwe/" target="_blank" rel="noopener">点这里</a> 下载所需版本符号文件（需要科学上网），拖进虚拟机直接点击即可安装。  </li>
 <li>一般方法：在target里按<a href="https://www.anquanke.com/post/id/105342#h2-0" target="_blank" rel="noopener">此链接</a>《安装符号文件》一节 操作下载符号文件（很慢，建议挂代理，可能还是慢），拷进host同一目录（/usr/lib/debug/boot）即可。</li>
 </ul>
 </blockquote>
-<h3 id="3-源代码"><a href="#3-源代码" class="headerlink" title="3.源代码"></a>3.源代码</h3><p>打开/etc/apt/sources.list，启用deb-src，sudo apt-get update更新</p>
+<h3 id="源代码"><a href="#源代码" class="headerlink" title="源代码"></a>源代码</h3><p>打开/etc/apt/sources.list，启用deb-src，sudo apt-get update更新</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/apt/sources.list</span><br><span class="line">去掉下面这句话的注释</span><br><span class="line">deb-src http://us.archive.ubuntu.com/ubuntu/ xenial main restricted</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line">sudo apt-get update</span><br></pre></td></tr></table></figure>
 <p>搜索所有版本的source code:apt-cache search linux-source<br>安装指定版本的source code:sudo apt-get install linux-source-x.x.x<br>解压缩得到源码 :sudo tar -xvf linux-source-4.8.0.tar.bz2 （host中安放源码的路径需要调试后才知道，见7.3）</p>
-<h3 id="4-串口通信"><a href="#4-串口通信" class="headerlink" title="4.串口通信"></a>4.串口通信</h3><p>建立host与target之间的串口连接。<br>虚拟机设置中移除打印机，添加串口，target为服务器，host为客户端。详见<a href="https://www.anquanke.com/post/id/105342#h2-0" target="_blank" rel="noopener">此链接</a>《移除打印机，添加串口》一节。  </p>
-<h3 id="5-修改target启动程序"><a href="#5-修改target启动程序" class="headerlink" title="5 修改target启动程序"></a>5 修改target启动程序</h3><p>需要让target在开机时候可选择进入kgdb的调试状态，首先需要修改grub文件，增加grub引导时候的菜单项。  </p>
+<h3 id="串口通信"><a href="#串口通信" class="headerlink" title="串口通信"></a>串口通信</h3><p>建立host与target之间的串口连接。<br>虚拟机设置中移除打印机，添加串口，target为服务器，host为客户端。详见<a href="https://www.anquanke.com/post/id/105342#h2-0" target="_blank" rel="noopener">此链接</a>《移除打印机，添加串口》一节。  </p>
+<h3 id="修改target启动程序"><a href="#修改target启动程序" class="headerlink" title="修改target启动程序"></a>修改target启动程序</h3><p>需要让target在开机时候可选择进入kgdb的调试状态，首先需要修改grub文件，增加grub引导时候的菜单项。  </p>
 <blockquote>
 <p>sudo vim /etc/grub.d/40_custom</p>
 </blockquote>
@@ -388,7 +388,7 @@
 </blockquote>
 <p>修改完的40_custom文件样板如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/sh</span><br><span class="line">exec tail -n +3 $0</span><br><span class="line"># This file provides an easy way to add custom menu entries.  Simply type the</span><br><span class="line"># menu entries you want to add after this comment.  Be careful not to change</span><br><span class="line"># the &apos;exec tail&apos; line above.</span><br><span class="line">menuentry &apos;Ubuntu, kgdb, with Linux 4.8.0-36-generic&apos; --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option &apos;gnulinux-4.8.0-36-generic-advanced-aeac2f22-dfde-4e98-9c78-bb46f5724517&apos; &#123;</span><br><span class="line">		recordfail</span><br><span class="line">		load_video</span><br><span class="line">		gfxmode $linux_gfx_mode</span><br><span class="line">		insmod gzio</span><br><span class="line">		if [ x$grub_platform = xxen ]; then insmod xzio; insmod lzopio; fi</span><br><span class="line">		insmod part_msdos</span><br><span class="line">		insmod ext2</span><br><span class="line">		set root=&apos;hd0,msdos1&apos;</span><br><span class="line">		if [ x$feature_platform_search_hint = xy ]; then</span><br><span class="line">		  search --no-floppy --fs-uuid --set=root --hint-bios=hd0,msdos1 --hint-efi=hd0,msdos1 --hint-baremetal=ahci0,msdos1  aeac2f22-dfde-4e98-9c78-bb46f5724517</span><br><span class="line">		else</span><br><span class="line">		  search --no-floppy --fs-uuid --set=root aeac2f22-dfde-4e98-9c78-bb46f5724517</span><br><span class="line">		fi</span><br><span class="line">		echo	&apos;Loading Linux 4.8.0-36-generic ...&apos;</span><br><span class="line">		linux	/boot/vmlinuz-4.8.0-36-generic root=UUID=aeac2f22-dfde-4e98-9c78-bb46f5724517 ro find_preseed=/preseed.cfg auto noprompt priority=critical locale=en_US quiet kgdbwait kgdb8250=io,03f8,ttyS0,115200,4 kgdboc=ttyS0,115200 kgdbcon nokaslr</span><br><span class="line">		echo	&apos;Loading initial ramdisk ...&apos;</span><br><span class="line">		initrd	/boot/initrd.img-4.8.0-36-generic</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
 <p>修改grub的配置后，需要执行sudo update-grub来更新。更新后目标机器就准备好了。<br>重启按住shift,进入刚才添加的menu即可进入到被调试状态。</p>
-<h3 id="6-配置host（每次重启需要重新设置）"><a href="#6-配置host（每次重启需要重新设置）" class="headerlink" title="6. 配置host（每次重启需要重新设置）"></a>6. 配置host（每次重启需要重新设置）</h3><p>设置串口通信的波特率  </p>
+<h3 id="配置host（每次重启需要重新设置）"><a href="#配置host（每次重启需要重新设置）" class="headerlink" title="配置host（每次重启需要重新设置）"></a>配置host（每次重启需要重新设置）</h3><p>设置串口通信的波特率  </p>
 <blockquote>
 <p>sudo stty -F /dev/ttyS0 115200  </p>
 </blockquote>
@@ -396,10 +396,10 @@
 <blockquote>
 <p>sudo stty -F /dev/ttyS0</p>
 </blockquote>
-<h3 id="7-调试及善后"><a href="#7-调试及善后" class="headerlink" title="7.调试及善后"></a>7.调试及善后</h3><h4 id="7-1-调试前准备"><a href="#7-1-调试前准备" class="headerlink" title="7.1 调试前准备"></a>7.1 调试前准备</h4><p>此节为在host中调试，需要target以kgdb调试状态启动，记得先配置好host端口（见6）。<br>编写config，用source加载（直接在gdb里输入也可）<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">set architecture i386:x86-64:intel</span><br><span class="line">target remote /dev/ttyS0</span><br></pre></td></tr></table></figure></p>
-<h4 id="7-2-开始调试"><a href="#7-2-开始调试" class="headerlink" title="7.2 开始调试"></a>7.2 开始调试</h4><p>使用gdb来调试带符号的vmlinux</p>
+<h3 id="调试及善后"><a href="#调试及善后" class="headerlink" title="调试及善后"></a>调试及善后</h3><h4 id="调试前准备"><a href="#调试前准备" class="headerlink" title="调试前准备"></a>调试前准备</h4><p>此节为在host中调试，需要target以kgdb调试状态启动，记得先配置好host端口（见6）。<br>编写config，用source加载（直接在gdb里输入也可）<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">set architecture i386:x86-64:intel</span><br><span class="line">target remote /dev/ttyS0</span><br></pre></td></tr></table></figure></p>
+<h4 id="开始调试"><a href="#开始调试" class="headerlink" title="开始调试"></a>开始调试</h4><p>使用gdb来调试带符号的vmlinux</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo gdb /usr/lib/debug/boot/vmlinux-4.8.0-36-generic</span><br><span class="line">(gdb) source config</span><br></pre></td></tr></table></figure>
-<h4 id="7-3-善后：在host中安放target源码（接3）"><a href="#7-3-善后：在host中安放target源码（接3）" class="headerlink" title="7.3 善后：在host中安放target源码（接3）"></a>7.3 善后：在host中安放target源码（接3）</h4><blockquote>
+<h4 id="善后：在host中安放target源码（接3）"><a href="#善后：在host中安放target源码（接3）" class="headerlink" title="善后：在host中安放target源码（接3）"></a>善后：在host中安放target源码（接3）</h4><blockquote>
 <p>(gdb) l</p>
 </blockquote>
 <p>查找源码。本来应该显示具体的源码，但是这里只是打印出了所在文件，这是因为在这个路径下没有源码。<br>所以说我们就建立这个路径，然后把源码放进去：</p>
@@ -410,10 +410,9 @@
 <blockquote>
 <p>dir /build/linux-hwe-edge-gyUj63/linux-hwe-edge-4.10.0</p>
 </blockquote>
-<h4 id="5-4-单步调试"><a href="#5-4-单步调试" class="headerlink" title="5.4 单步调试"></a>5.4 单步调试</h4><p>详见<a href="https://www.anquanke.com/post/id/105342#h2-0" target="_blank" rel="noopener">此链接</a>《单步调试》。  </p>
+<h4 id="单步调试"><a href="#单步调试" class="headerlink" title="单步调试"></a>单步调试</h4><p>详见<a href="https://www.anquanke.com/post/id/105342#h2-0" target="_blank" rel="noopener">此链接</a>《单步调试》。  </p>
 <p>Tips：target运行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo su &amp;&amp; echo g &gt; &quot;/proc/sysrq-trigger&quot;</span><br></pre></td></tr></table></figure></p>
 <p>进入假死，方便host下断点</p>
-<p>指令备忘录  </p>
 <blockquote>
 <p>参考链接<br>[1] : 清楚，双机环境相同 <a href="https://www.anquanke.com/post/id/105342#h2-0" target="_blank" rel="noopener">https://www.anquanke.com/post/id/105342#h2-0</a><br>[2] : 全面 <a href="http://advdbg.org/blogs/advdbg_system/articles/7147.aspx" target="_blank" rel="noopener">http://advdbg.org/blogs/advdbg_system/articles/7147.aspx</a></p>
 </blockquote>
@@ -589,7 +588,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-内核调试支持"><span class="nav-number">1.</span> <span class="nav-text">1.内核调试支持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-符号文件"><span class="nav-number">2.</span> <span class="nav-text">2.符号文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-源代码"><span class="nav-number">3.</span> <span class="nav-text">3.源代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-串口通信"><span class="nav-number">4.</span> <span class="nav-text">4.串口通信</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-修改target启动程序"><span class="nav-number">5.</span> <span class="nav-text">5 修改target启动程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-配置host（每次重启需要重新设置）"><span class="nav-number">6.</span> <span class="nav-text">6. 配置host（每次重启需要重新设置）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-调试及善后"><span class="nav-number">7.</span> <span class="nav-text">7.调试及善后</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#7-1-调试前准备"><span class="nav-number">7.1.</span> <span class="nav-text">7.1 调试前准备</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-2-开始调试"><span class="nav-number">7.2.</span> <span class="nav-text">7.2 开始调试</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-3-善后：在host中安放target源码（接3）"><span class="nav-number">7.3.</span> <span class="nav-text">7.3 善后：在host中安放target源码（接3）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-4-单步调试"><span class="nav-number">7.4.</span> <span class="nav-text">5.4 单步调试</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#内核调试支持"><span class="nav-number">1.</span> <span class="nav-text">内核调试支持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#符号文件"><span class="nav-number">2.</span> <span class="nav-text">符号文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#源代码"><span class="nav-number">3.</span> <span class="nav-text">源代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#串口通信"><span class="nav-number">4.</span> <span class="nav-text">串口通信</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改target启动程序"><span class="nav-number">5.</span> <span class="nav-text">修改target启动程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置host（每次重启需要重新设置）"><span class="nav-number">6.</span> <span class="nav-text">配置host（每次重启需要重新设置）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调试及善后"><span class="nav-number">7.</span> <span class="nav-text">调试及善后</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#调试前准备"><span class="nav-number">7.1.</span> <span class="nav-text">调试前准备</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#开始调试"><span class="nav-number">7.2.</span> <span class="nav-text">开始调试</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#善后：在host中安放target源码（接3）"><span class="nav-number">7.3.</span> <span class="nav-text">善后：在host中安放target源码（接3）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#单步调试"><span class="nav-number">7.4.</span> <span class="nav-text">单步调试</span></a></li></ol></li></ol></div>
             
 
           </div>
