@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="比特币," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="本文试图从功能系统层面去理解比特币的设计理念，关于比特币的原理和细节只做选择性的说明，不完善的地方请参照比特币白皮书。不考虑具体实现细节。可能影响理解的前驱知识：非对称加密、哈希算法   点对点的电子货币系统要了解比特币系统，首先我们要清楚中本聪设计比特币的出发点是什么。正如白皮书的标题：Bitcoin: A Peer-to-Peer Electronic Cash System 所述，中本聪的设">
+<meta name="keywords" content="比特币">
+<meta property="og:type" content="article">
+<meta property="og:title" content="粗谈比特币：系统设计">
+<meta property="og:url" content="http://H0w1.github.io/2018/11/12/粗谈比特币：系统设计/index.html">
+<meta property="og:site_name" content="BLOG of H0w1">
+<meta property="og:description" content="本文试图从功能系统层面去理解比特币的设计理念，关于比特币的原理和细节只做选择性的说明，不完善的地方请参照比特币白皮书。不考虑具体实现细节。可能影响理解的前驱知识：非对称加密、哈希算法   点对点的电子货币系统要了解比特币系统，首先我们要清楚中本聪设计比特币的出发点是什么。正如白皮书的标题：Bitcoin: A Peer-to-Peer Electronic Cash System 所述，中本聪的设">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-11-12T13:56:15.748Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="粗谈比特币：系统设计">
+<meta name="twitter:description" content="本文试图从功能系统层面去理解比特币的设计理念，关于比特币的原理和细节只做选择性的说明，不完善的地方请参照比特币白皮书。不考虑具体实现细节。可能影响理解的前驱知识：非对称加密、哈希算法   点对点的电子货币系统要了解比特币系统，首先我们要清楚中本聪设计比特币的出发点是什么。正如白皮书的标题：Bitcoin: A Peer-to-Peer Electronic Cash System 所述，中本聪的设">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://H0w1.github.io/2018/11/12/粗谈比特币：系统设计/"/>
+
+
+
+
+
+  <title>粗谈比特币：系统设计 | BLOG of H0w1</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">BLOG of H0w1</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://H0w1.github.io/2018/11/12/粗谈比特币：系统设计/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="H0w1">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="BLOG of H0w1">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">粗谈比特币：系统设计</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-12T21:47:12+08:00">
+                2018-11-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/区块链/" itemprop="url" rel="index">
+                    <span itemprop="name">区块链</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本文试图从功能系统层面去理解比特币的设计理念，关于比特币的原理和细节只做选择性的说明，不完善的地方请参照<a href="https://bitcoin.org/bitcoin.pdf" target="_blank" rel="noopener">比特币白皮书</a>。不考虑具体实现细节。<br>可能影响理解的前驱知识：非对称加密、哈希算法  </p>
+<h3 id="点对点的电子货币系统"><a href="#点对点的电子货币系统" class="headerlink" title="点对点的电子货币系统"></a>点对点的电子货币系统</h3><p>要了解比特币系统，首先我们要清楚中本聪设计比特币的出发点是什么。正如白皮书的标题：Bitcoin: A Peer-to-Peer Electronic Cash System 所述，中本聪的设计的目标就是实现一个点对点的电子货币系统，更深入一点讲，就是发行一个去中心化的电子货币（中本聪的核心目标是*去中心化*，一切设计都是围绕这个中心的）。</p>
+<blockquote>
+<p>（“点对点”不意味着“去中心化”，但去中心化理所当然要进入分布式的场景。目前看来，点对点或者分布式的实现形式似乎是达成去中心化的必要条件）。    </p>
+</blockquote>
+<p>虽然关乎比特币缔造者的追求，本文无意于讨论去中心化电子货币的现实意义。<br>一个去中心化的电子货币系统，首先是一个电子货币系统，然后它满足去中心化的特点。<br>广义上说，我们身边有许多电子货币系统，在我们使用支付宝、微信支付进行转账付款的时候，我们相当于在使用这些企业提供的电子货币系统了（只不过他们的代币是与人民币1比1兑换的）。抽象地讲，在假使有一个可信的中心的情况下，只要由中心保证货币的发行和按序正确地记录每一笔交易，我们就可以基于此搭建一个可信的电子货币系统。</p>
+<blockquote>
+<p>电子货币没有实体，所以只需要记录每一笔交易，即确定一个全局的账本，就可以由此推出每个账户的余额。而对于每个账户实体的抽象形式，一个直观的方法是使用状态机，这样每一笔交易都可以看成是交易申请作为输入引起的状态机的状态转换，以太坊的货币系统即采用这种形式，详见以太坊白皮书。</p>
+</blockquote>
+<p>简言之，一个中心化的电子货币系统，需要一个可信的中心发行货币，维护一个全局账本，并对每笔交易提供检查和记录。那如果是去中心化的电子货币系统呢？    从设计上讲，一个彻底的去中心化的电子货币，从货币的发行到交易的检查、账本的维护，理应统统交由一个由分布式节点（miner）组成的网络。可以说，所谓的*去中心*就是利用这些分布式节点去模拟一个理想节点，去完成中心化系统中可信中心完成的事情。这个理想节点的背后是一个个相互竞争的分布式节点，由此就可以达到去中心、去第三方信任的目的。<br>由此，对于一个去中心的电子货币系统，我们可以描绘这样一个雏形：一个货币系统通过分布式节点组成的网络去模拟“可信中心”，用户则向这个分布式节点网络发起交易。比特币系统<br>为了便于描述，本文将比特币系统划分为两个功能子系统进行介绍。一个在上层，面向用户的交易系统：功能近似于普通的电子交易系统，为用户提供交易服务；一个是在下层，面向分布式的服务器节点，目标是达成共识，提供对上层的服务支持。</p>
+<h3 id="比特币交易系统"><a href="#比特币交易系统" class="headerlink" title="比特币交易系统"></a>比特币交易系统</h3><p>本文将比特币面向终端用户（非miner），提供转账（交易）功能的功能抽象层次称为比特币交易系统。  </p>
+<h4 id="账户模型"><a href="#账户模型" class="headerlink" title="账户模型"></a>账户模型</h4><p>对于电子支付系统，一种*容易理解*的方法是用状态机去建模账户模型(与我们生活中的账户模型非常相似)。即每个账户用一个状态机表示，用状态的变化对应账户余额的变化。<br>通俗地讲，就是账户里有余额，交易的发生代表着账户间余额的变动。以太坊即采用的这种形式。<br>在这种设计里，只有“帐”，没有“钱”。只要记录下每一笔交易和所有账户的状态（余额），这个系统即可正常运转，并不存在一个价值（多少多少钱）的实体，没有“钱”的概念。<br>借用一种说法，这是一种*基于账户*或者说*账户为中心*的设计，称为账户余额模型。</p>
+<blockquote>
+<p>现在的银行支付系统、证券交易系统，包括互联网第三方支付系统（比如支付宝等），其核心都是基于账户（account based）的设计，底层数据都是由关系型数据库(RMDB：Relation Manage DataBase)支撑。</p>
+</blockquote>
+<p>出于某些原因，比特币的设计并不是基于账户的，而是基于价值的实体（比特币里的钱：UTXO）的。用大白话讲，比特币里的交易不是把多少钱从A划到B的账上；<br>而是A把多少钱，这个实体，实实在在地转交给B。这反而更符合我们的生活经验：拿着钱而不是存折去做生意。  </p>
+<blockquote>
+<p>比特币中扮演“钱”这个角色的实体叫 UTXO (Unspent Transaction Output)，在下一小节再做介绍，我们暂时把它想象成一组有所有权的代码（可以当钱花）。</p>
+</blockquote>
+<p>简言之，基于账户的设计，账户是一个基本概念，价值（钱）的流动只是账户余额的变化，价值没有实体存在；基于价值的设计，价值（钱）作为基本概念，价值的流动就是钱所有权的变化，所有权的主体近似于“账户”这个概念。<br>在比特币里，这个 UTXO所有权的主体我们称之为“地址”。比特币用非对称加密技术解决了 UTXO 的所有权的问题。实际上比特币的“地址”是一个公钥哈希。“地址”不是账户，不存在账户余额这个属性，它就是一个所有权的主体，类似于一个名字或者说标记，拥有者通过“地址”对应的私钥作为证明。每个UTXO上都会有这样的标记，表明这个UTXO的归属，拥有者在花费这个UTXO时凭借私钥证明归属。</p>
+<blockquote>
+<p>非对称加密技术是一个现成的归属权证明的解决方案。可以用公钥作为标记，私钥作为证明。考虑到私钥的安全，比特币推荐使用公钥的哈希作为标记，实际上<br>“地址”就是这样一个公钥哈希。<br>比特币会在“地址”花钱时做检查，如果只收款，“地址”对外暴露的可以只有一个公钥哈希，但付款时必定要暴露完整的公钥。 基于一些密码学常识我们知道，通过公钥哈希去倒推公钥是不现实的，但从公钥计算私钥存在多项式时间复杂度的量子算法（是的，可以说中本聪考虑到了量子计算对非对称加密技术的威胁）。     </p>
+</blockquote>
+<p>不难看出，归属权只需要在发起交易时检查证明。比特币用“脚本”（script）扩展了多种交易形式的归属权证明，拓宽了交易形式的同时，为智能合约的发展提供了土壤。 当然，基于账户的设计在交易时同样要检查归属权。区块链上的所谓“智能合约”，其实就是对这种检查的拓展。</p>
+<p>相比较与状态机建模中的“账户”，“地址”的设计无疑是相当简陋的，不过对于一个交易系统而言这已经足够了。但对于普通用户而言，由于UTXO和“地址”的一些特性，直接操作 “地址”的用户体验肯定是糟糕的。所以一般会在“地址”上新建一个抽象层，统一管理私人持有的所有“地址”，习惯称之为“钱包”（wallet），钱包是可以有账户机制的，钱包独立于比特币系统，只是一个辅助管理秘钥的工具。钱包客户端有好多种，官方版本为Bitcoin Core。</p>
+<p>实际上，“地址”在使用过一次UTXO后，其公钥就已经暴露了。除了这个原因，出于更好的私密性的需求，比特币更推荐“地址”的一次性使用。   </p>
+<blockquote>
+<p>一个总结<a href="https://draveness.me/utxo-account-models" target="_blank" rel="noopener">[1]</a><a href="https://juejin.im/entry/5a97f7226fb9a028c06a4118" target="_blank" rel="noopener">[2]</a>：   </p>
+<ul>
+<li>UTXO模型的优点（比特币为例）：  <ul>
+<li>如果用户启用了新的地址用于转账和交易，新地址与原地址之间的关系很难被追踪，更好地保证用户的隐私   </li>
+<li>无需维护余额等状态值。  </li>
+<li>UTXO是独立数据记录，可以通过并行极大的提升区块链交易验证速度。  </li>
+</ul>
+</li>
+<li>账户余额模型的优点（以太坊为例）：  <ul>
+<li>可以快速获取账户的余额，而比特币需要将指定地址所拥有的所有UTXO中的未花费交易总值整合。  </li>
+<li>节省空间，因为每笔交易只有一个输入一个输出。     </li>
+<li>由于在区块链层级没有*币的来源*这一概念，很难实现对来源的追踪和回溯。   </li>
+<li>因为创建交易时不需要对过去的 UTXO 进行签名，可以从任何一个时间点开始同步区块的状态，利于编写轻量级客户端。  </li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p>无论是 UTXO 模型还是账户余额模型，都能够很好地解决区块链世界中的*安全*问题，保证交易的合法，从原理上杜绝一些可能的攻击行为，实现原理的不同其实也只是由于出发点不同，在设计时权衡了利弊。</p>
+<h4 id="价值流动"><a href="#价值流动" class="headerlink" title="价值流动"></a>价值流动</h4><p>UTXO 链 简单的状态机 交易=价值的流动 交易 脚本</p>
+<h3 id="比特币分布式服务系统"><a href="#比特币分布式服务系统" class="headerlink" title="比特币分布式服务系统"></a>比特币分布式服务系统</h3><p>检查 脚本 共识 PoW 人头投票与拜占庭 </p>
+<h3 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h3><p>断断续续写了大半年，很惭愧，先整理一部分，希望早日填坑。<br>本文只代表个人观点，欢迎交流指正。转载请标明出处。  </p>
+<ul>
+<li style="list-style: none"><input type="checkbox"> TODO: 2.2 价值流动, 3 比特币分布式服务系统 2018/11/12  </li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/比特币/" rel="tag"># 比特币</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/10/24/CVE-2018-12882漏洞重现（PHP）/" rel="next" title="CVE-2018-12882漏洞重现（PHP）">
+                <i class="fa fa-chevron-left"></i> CVE-2018-12882漏洞重现（PHP）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">H0w1</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#点对点的电子货币系统"><span class="nav-number">1.</span> <span class="nav-text">点对点的电子货币系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#比特币交易系统"><span class="nav-number">2.</span> <span class="nav-text">比特币交易系统</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#账户模型"><span class="nav-number">2.1.</span> <span class="nav-text">账户模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#价值流动"><span class="nav-number">2.2.</span> <span class="nav-text">价值流动</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#比特币分布式服务系统"><span class="nav-number">3.</span> <span class="nav-text">比特币分布式服务系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#后记"><span class="nav-number">4.</span> <span class="nav-text">后记</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">H0w1</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
